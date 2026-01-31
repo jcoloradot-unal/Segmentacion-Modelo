@@ -220,3 +220,93 @@ def predict_masks(files: List[UploadFile], boxes: List[PromptData]):
     return masks
 
 # predict_masks()
+
+class PointPromptData(TypedDict):
+    points: List[tuple[int, int]]  # List of (x, y) coordinates
+    labels: List[int]  # List of labels (1 for positive, 0 for negative)
+    frame: int
+
+def predict_masks_with_points(files: List[UploadFile], point_prompts: List[PointPromptData]):
+    """
+    Predict masks using point prompts instead of bounding boxes.
+    
+    Args:
+        files: List of uploaded image files
+        point_prompts: List of point prompt data containing points, labels, and frame indices
+    
+    Returns:
+        List of dictionaries containing frame indices and corresponding masks
+    """
+    id = str(uuid.uuid4())
+    input_folder = save_images(id, files)
+    
+    predictor = build_sam2_video_predictor(
+        config_file=MODEL_CONFIG,
+        ckpt_path=MODEL_CHECKPOINT,
+        apply_postprocessing=True,
+        vos_optimized=False,
+    )
+    
+    # Load the video frames
+    frame_names = [
+        os.path.splitext(p)[0] + ".jpg"
+        for p in os.listdir(input_folder)
+        if os.path.splitext(p)[-1] in [".jpg", ".jpeg", ".JPG", ".JPEG"]
+    ]
+    frame_names = list(sorted(frame_names))
+    
+    inference_state = predictor.init_state(
+        video_path=str(input_folder),
+        async_loading_frames=False
+    )
+
+    predictor.reset_state(inference_state)
+
+    height = inference_state["video_height"]
+    width = inference_state["video_width"]
+
+    # Add prompts for each point set
+    for i in range(len(point_prompts)):
+        frame = point_prompts[i]["frame"]
+        points = np.array(point_prompts[i]["points"], dtype=np.float32)
+        labels = np.array(point_prompts[i]["labels"], dtype=np.int32)
+        
+        print(f"Adding {len(points)} points to frame {frame}")
+        predictor.add_new_points_or_box(
+            inference_state=inference_state,
+            frame_idx=frame,
+            obj_id=i + 1,
+            points=points,
+            labels=labels,
+        )
+
+    # Run propagation throughout the video
+    video_segments = {}
+    
+    for out_frame_idx, out_obj_ids, out_mask_logits in predictor.propagate_in_video(
+        inference_state
+    ):
+        per_obj_output_mask = {
+            out_obj_id: (out_mask_logits[i] > 0.0).cpu().numpy()
+            for i, out_obj_id in enumerate(out_obj_ids)
+        }
+        video_segments[out_frame_idx] = per_obj_output_mask
+
+    # Generate masks for each frame
+    masks = []
+    for out_frame_idx, per_obj_output_mask in video_segments.items():
+        mask = get_mask(per_obj_output_mask, height, width)
+        masks.append({
+            "frame": out_frame_idx,
+            "mask": mask.tolist()
+        })
+    
+    # Clean up the temporary folder
+    try:
+        shutil.rmtree(input_folder)
+        print(f"✓ Cleaned up temporary folder: {input_folder}")
+    except Exception as e:
+        print(f"Warning: Could not clean up {input_folder}: {e}")
+    
+    print(f"RETURNING {len(masks)} masks")
+    return masks

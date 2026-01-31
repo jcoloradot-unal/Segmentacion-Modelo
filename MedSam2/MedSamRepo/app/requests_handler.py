@@ -3,12 +3,18 @@ from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.responses import FileResponse
 from typing import List, TypedDict
 from segmentacion_model import predict_masks
+from segmentacion_model import predict_masks_with_points
 import json
 
 app = FastAPI()
 
 class PromptData(TypedDict):
     box: tuple[int, int, int, int]
+    frame: int
+    
+class PointPromptData(TypedDict):
+    points: List[tuple[int, int]]
+    labels: List[int]
     frame: int
 
 @app.post("/mask")
@@ -24,6 +30,25 @@ def segment_sequence(files: List[UploadFile], body: str = Form(...)):
         })
     
     masks = predict_masks(files, box_data_list)
+    return masks
+
+@app.post("/mask/points")
+def segment_sequence_with_points(files: List[UploadFile], body: str = Form(...)):
+    body_data = json.loads(body)
+    
+    point_data_list = []
+    
+    for d in body_data["annotations"]:
+        # Convert points list of lists to list of tuples
+        points = [tuple(point) for point in d["points"]]
+        
+        point_data_list.append({
+            "points": points,
+            "labels": d["labels"],
+            "frame": d["frame"]
+        })
+    
+    masks = predict_masks_with_points(files, point_data_list)
     return masks
 
 uvicorn.run(app, port=8001)
