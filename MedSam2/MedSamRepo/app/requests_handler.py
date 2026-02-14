@@ -1,6 +1,5 @@
 import uvicorn
-from fastapi import FastAPI, File, UploadFile, Form
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, UploadFile, Form
 from typing import List, TypedDict
 from segmentacion_model import predict_masks
 from segmentacion_model import predict_masks_with_points
