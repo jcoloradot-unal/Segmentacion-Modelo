@@ -98,6 +98,7 @@ def save_images(uuid: str, images: List[UploadFile], lowest_frame, greatest_fram
     saved_files = []
     try:
         for idx, file in enumerate(images):
+            print("INDEX AS FILE?:", idx)
             if idx >= lowest_frame:
                 # Just storing images from lowest moving forward
                 # Use original filename or create sequential name
@@ -306,9 +307,10 @@ def predict_masks_with_points(files: List[UploadFile], point_prompts: List[Point
 
         predictor2.reset_state(inference_state2)
         
+        point_prompts = [f for f in point_prompts if f["frame"] == lowest_frame]
         # Add prompts for each point set backwards
         for i in range(len(point_prompts)):
-            frame = greatest_frame - point_prompts[i]["frame"]
+            frame = 0
             points = np.array(point_prompts[i]["points"], dtype=np.float32)
             labels = np.array(point_prompts[i]["labels"], dtype=np.int32)
             predictor2.add_new_points_or_box(
