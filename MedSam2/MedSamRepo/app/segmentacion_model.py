@@ -281,7 +281,7 @@ def predict_masks_with_points(files: List[UploadFile], point_prompts: List[Point
         }
         video_segments[out_frame_idx] = per_obj_output_mask
     
-    # Generate masks for each frame
+    # Generate masks for each frame fwd
     masks = []   
     for out_frame_idx, per_obj_output_mask in video_segments.items():
         mask = get_mask(per_obj_output_mask, height, width)
@@ -330,7 +330,7 @@ def predict_masks_with_points(files: List[UploadFile], point_prompts: List[Point
             }
             video_segments[out_frame_idx] = per_obj_output_mask
     
-    # Generate masks for each frame
+    # Generate masks for each frame bwd
     for out_frame_idx, per_obj_output_mask in video_segments.items():
         mask = get_mask(per_obj_output_mask, height, width)
         masks.append({
