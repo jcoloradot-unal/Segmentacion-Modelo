@@ -4,3 +4,13 @@ requires = [
     "torch>=2.5.1",
     ]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "your-project-name"
+version = "0.1.0"
+dependencies = [
+    "fastapi[standard]",
+    "sam2==1.1.0",
+    "setuptools==80.9.0",
+    "matplotlib==3.10.7",
+]
