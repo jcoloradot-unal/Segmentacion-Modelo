@@ -1,6 +1,14 @@
 [build-system]
-requires = [
-    "setuptools>=61.0",  
-    "torch>=2.5.1",
-    ]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "segmentacion"
+version = "0.0.1"
+description = ""
+dependencies = [
+    "fastapi[standard]",
+    "torch>=2.5.1",
+    "sam2==1.1.0",
+    "matplotlib==3.10.7",
+]

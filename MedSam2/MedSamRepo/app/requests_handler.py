@@ -50,4 +50,4 @@ def segment_sequence_with_points(files: List[UploadFile], body: str = Form(...))
     masks = predict_masks_with_points(files, point_data_list)
     return masks
 
-uvicorn.run(app, port=8001)
+uvicorn.run(app, host="0.0.0.0", port=8001)
