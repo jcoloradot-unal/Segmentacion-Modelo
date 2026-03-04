@@ -16,6 +16,10 @@ class PointPromptData(TypedDict):
     labels: List[int]
     frame: int
 
+@app.get("/")
+def test():
+    return "that was succesful :D"
+
 @app.post("/mask")
 def segment_sequence(files: List[UploadFile], body: str = Form(...)):
     body_data = json.loads(body)
