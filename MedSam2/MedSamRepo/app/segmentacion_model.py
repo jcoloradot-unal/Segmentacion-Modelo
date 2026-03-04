@@ -23,8 +23,8 @@ DAVIS_PALETTE = b"\x00\x00\x00\x80\x00\x00\x00\x80\x00\x80\x80\x00\x00\x00\x80\x
 OUTPUT_DIR = os.getcwd() + "\\output"
 FRAMES_OUTPUT = "frames"
 VIDEO_OUTPUT = "video"
-MODEL_CONFIG = r"/Segmentacion-Modelo/MedSam2/MedSamRepo/sam2/configs/sam2.1_hiera_t512.yaml"
-MODEL_CHECKPOINT = r"/Segmentacion-Modelo/MedSam2/MedSamRepo/MedSAM2_latest.pt"
+MODEL_CONFIG = os.getcwd() + r"/Segmentacion-Modelo/MedSam2/MedSamRepo/sam2/configs/sam2.1_hiera_t512.yaml"
+MODEL_CHECKPOINT = os.getcwd() + r"/Segmentacion-Modelo/MedSam2/MedSamRepo/MedSAM2_latest.pt"
 
 class PromptData(TypedDict):
     box: tuple[int, int, int, int]
