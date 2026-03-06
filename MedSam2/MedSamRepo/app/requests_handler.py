@@ -56,7 +56,7 @@ def segment_sequence_with_points(files: List[UploadFile], body: str = Form(...))
         "masks": json.dumps(masks)
     }
     
-    print(js)
+    print(str(js)[:200])
     
     return js 
 
