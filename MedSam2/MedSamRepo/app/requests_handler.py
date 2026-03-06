@@ -53,7 +53,7 @@ def segment_sequence_with_points(files: List[UploadFile], body: str = Form(...))
     
     masks = predict_masks_with_points(files, point_data_list)
     js = {
-        "masks": json.dumps(masks)
+        "masks": masks
     }
     
     print(str(js)[:200])
