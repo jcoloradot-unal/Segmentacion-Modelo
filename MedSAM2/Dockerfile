@@ -10,7 +10,7 @@ RUN apt-get update && \
 RUN git clone https://github.com/jcoloradot-unal/Segmentacion-Modelo.git && \
     python3 -m venv /opt/venv && \
     /opt/venv/bin/pip install --no-cache-dir -e '/workspace/Segmentacion-Modelo/MedSAM2[dev]' && \
-    /opt/venv/bin/pip install --no-cache-dir fastapi[standard]
+    /opt/venv/bin/pip install --no-cache-dir fastapi uvicorn
 
 ENV PATH="/opt/venv/bin:$PATH"
 

@@ -33,20 +33,8 @@ REQUIRED_PACKAGES = [
 EXTRA_PACKAGES = {
     "notebooks": [
         "matplotlib>=3.9.1",
-        "jupyter>=1.0.0",
         "opencv-python>=4.10.0",
         "eva-decord>=0.6.1",
-    ],
-    "interactive-demo": [
-        "Flask>=3.0.3",
-        "Flask-Cors>=5.0.0",
-        "av>=13.0.0",
-        "dataclasses-json>=0.6.7",
-        "eva-decord>=0.6.1",
-        "gunicorn>=23.0.0",
-        "imagesize>=1.4.1",
-        "pycocotools>=2.0.8",
-        "strawberry-graphql>=0.239.2",
     ],
     "dev": [
         "matplotlib>=3.9.1",
