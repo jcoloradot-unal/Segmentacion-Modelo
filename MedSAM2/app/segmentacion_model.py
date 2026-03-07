@@ -24,12 +24,12 @@ DAVIS_PALETTE = b"\x00\x00\x00\x80\x00\x00\x00\x80\x00\x80\x80\x00\x00\x00\x80\x
 OUTPUT_DIR = os.getcwd() + "\\output"
 FRAMES_OUTPUT = "frames"
 VIDEO_OUTPUT = "video"
-if os.name == 'nt':
-    MODEL_CONFIG = os.getcwd() + "/sam2/configs/sam2.1_hiera_t512.yaml"
-    MODEL_CHECKPOINT = os.getcwd() + "/checkpoints/MedSAM2_latest.pt"
-else:
-    MODEL_CONFIG = r"//workspace/Segmentacion-Modelo/MedSAM2/MedSamRepo/sam2/configs/sam2.1_hiera_t512.yaml"
-    MODEL_CHECKPOINT = r"//workspace/Segmentacion-Modelo/MedSAM2/MedSamRepo/MedSAM2_latest.pt"
+# if os.name == 'nt':
+#     MODEL_CONFIG = os.getcwd() + "/sam2/configs/sam2.1_hiera_t512.yaml"
+#     MODEL_CHECKPOINT = os.getcwd() + "/checkpoints/MedSAM2_latest.pt"
+# else:
+MODEL_CONFIG = r"//workspace/Segmentacion-Modelo/MedSAM2/MedSamRepo/sam2/configs/sam2.1_hiera_t512.yaml"
+MODEL_CHECKPOINT = r"//workspace/Segmentacion-Modelo/MedSAM2/MedSamRepo/MedSAM2_latest.pt"
 
 class PromptData(TypedDict):
     box: tuple[int, int, int, int]
@@ -84,7 +84,10 @@ class PromptData(TypedDict):
     box: tuple[int, int, int, int]
     frame: int
 
-INPUT_FOLDER_STORAGE = Path(r"C:\Users\MSI\Desktop\Apps\Apps\Segmentacion\Segmentacion-Modelo\MedSam2\MedSamRepo\inputs")
+if os.name == 'nt':
+    INPUT_FOLDER_STORAGE = os.getcwd() + "inputs"
+else:
+    INPUT_FOLDER_STORAGE = r"//workspace/Segmentacion-Modelo/MedSAM2/MedSamRepo/inputs"
 
 def save_images(uuid: str, images: List[UploadFile], lowest_frame, greatest_frame) -> Path:
     if not images:

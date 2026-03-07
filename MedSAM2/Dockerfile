@@ -12,8 +12,6 @@ RUN git clone https://github.com/jcoloradot-unal/Segmentacion-Modelo.git && \
     /opt/venv/bin/pip install --no-cache-dir -e '/workspace/Segmentacion-Modelo/MedSAM2' && \
     /opt/venv/bin/pip install --no-cache-dir fastapi[standard]
 
-ENV PATH="/opt/venv/bin:$PATH"
-
 COPY /checkpoints/MedSAM2_latest.pt /workspace/Segmentacion-Modelo/MedSAM2/checkpoints
 
 EXPOSE 8001
