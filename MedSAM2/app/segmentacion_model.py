@@ -29,7 +29,7 @@ VIDEO_OUTPUT = "video"
 #     MODEL_CHECKPOINT = os.getcwd() + "/checkpoints/MedSAM2_latest.pt"
 # else:
 MODEL_CONFIG = r"//workspace/Segmentacion-Modelo/MedSAM2/sam2/configs/sam2.1_hiera_t512.yaml"
-MODEL_CHECKPOINT = r"//workspace/Segmentacion-Modelo/MedSAM2/MedSAM2_latest.pt"
+MODEL_CHECKPOINT = r"//workspace/Segmentacion-Modelo/MedSAM2/checkpoints/MedSAM2_latest.pt"
 
 class PromptData(TypedDict):
     box: tuple[int, int, int, int]
