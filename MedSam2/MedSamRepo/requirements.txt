@@ -1,5 +1,4 @@
 fastapi[standard]
-sam2
 setuptools
 matplotlib
 numpy

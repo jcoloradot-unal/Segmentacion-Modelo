@@ -1,6 +1,8 @@
 import os
 import numpy as np
 from PIL import Image
+import sys
+sys.path.insert(0, r"C:\Users\MSI\Desktop\Apps\Apps\Segmentacion\Segmentacion-Modelo\MedSam2\MedSamRepo")
 from sam2.build_sam import build_sam2_video_predictor
 from typing import List, TypedDict
 from fastapi import UploadFile
@@ -23,8 +25,10 @@ DAVIS_PALETTE = b"\x00\x00\x00\x80\x00\x00\x00\x80\x00\x80\x80\x00\x00\x00\x80\x
 OUTPUT_DIR = os.getcwd() + "\\output"
 FRAMES_OUTPUT = "frames"
 VIDEO_OUTPUT = "video"
-MODEL_CONFIG = r"//workspace/Segmentacion-Modelo/MedSam2/MedSamRepo/sam2/configs/sam2.1_hiera_t512.yaml"
-MODEL_CHECKPOINT = r"//workspace/Segmentacion-Modelo/MedSam2/MedSamRepo/MedSAM2_latest.pt"
+# MODEL_CONFIG = r"//workspace/Segmentacion-Modelo/MedSam2/MedSamRepo/sam2/configs/sam2.1_hiera_t512.yaml"
+MODEL_CONFIG = os.getcwd() + "/sam2/configs/sam2.1_hiera_t512.yaml"
+# MODEL_CHECKPOINT = r"//workspace/Segmentacion-Modelo/MedSam2/MedSamRepo/MedSAM2_latest.pt"
+MODEL_CHECKPOINT = os.getcwd() + "/checkpoints/MedSAM2_latest.pt"
 
 class PromptData(TypedDict):
     box: tuple[int, int, int, int]
