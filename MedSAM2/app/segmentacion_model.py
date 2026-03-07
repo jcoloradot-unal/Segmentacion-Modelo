@@ -9,7 +9,6 @@ from pathlib import Path
 import shutil
 import uuid
 import torch._dynamo
-import platform
 torch._dynamo.config.suppress_errors = True
 
 torch.set_default_dtype(torch.float32)
@@ -25,12 +24,12 @@ DAVIS_PALETTE = b"\x00\x00\x00\x80\x00\x00\x00\x80\x00\x80\x80\x00\x00\x00\x80\x
 OUTPUT_DIR = os.getcwd() + "\\output"
 FRAMES_OUTPUT = "frames"
 VIDEO_OUTPUT = "video"
-if platform.system() == "Windows":
+if os.name == 'nt':
     MODEL_CONFIG = os.getcwd() + "/sam2/configs/sam2.1_hiera_t512.yaml"
     MODEL_CHECKPOINT = os.getcwd() + "/checkpoints/MedSAM2_latest.pt"
 else:
-    MODEL_CONFIG = r"//workspace/Segmentacion-Modelo/MedSam2/MedSamRepo/sam2/configs/sam2.1_hiera_t512.yaml"
-    MODEL_CHECKPOINT = r"//workspace/Segmentacion-Modelo/MedSam2/MedSamRepo/MedSAM2_latest.pt"
+    MODEL_CONFIG = r"//workspace/Segmentacion-Modelo/MedSAM2/MedSamRepo/sam2/configs/sam2.1_hiera_t512.yaml"
+    MODEL_CHECKPOINT = r"//workspace/Segmentacion-Modelo/MedSAM2/MedSamRepo/MedSAM2_latest.pt"
 
 class PromptData(TypedDict):
     box: tuple[int, int, int, int]
