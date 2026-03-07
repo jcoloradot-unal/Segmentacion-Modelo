@@ -84,10 +84,12 @@ class PromptData(TypedDict):
     box: tuple[int, int, int, int]
     frame: int
 
-if os.name == 'nt':
-    INPUT_FOLDER_STORAGE = os.getcwd() + "inputs"
+import platform
+
+if platform.system() == 'Windows':
+    INPUT_FOLDER_STORAGE = Path(os.getcwd() + "inputs")
 else:
-    INPUT_FOLDER_STORAGE = r"//workspace/Segmentacion-Modelo/MedSAM2/MedSamRepo/inputs"
+    INPUT_FOLDER_STORAGE = Path(r"//workspace/Segmentacion-Modelo/MedSAM2/MedSamRepo/inputs")
 
 def save_images(uuid: str, images: List[UploadFile], lowest_frame, greatest_frame) -> Path:
     if not images:
