@@ -28,8 +28,8 @@ VIDEO_OUTPUT = "video"
 #     MODEL_CONFIG = os.getcwd() + "/sam2/configs/sam2.1_hiera_t512.yaml"
 #     MODEL_CHECKPOINT = os.getcwd() + "/checkpoints/MedSAM2_latest.pt"
 # else:
-MODEL_CONFIG = r"//workspace/Segmentacion-Modelo/MedSAM2/MedSamRepo/sam2/configs/sam2.1_hiera_t512.yaml"
-MODEL_CHECKPOINT = r"//workspace/Segmentacion-Modelo/MedSAM2/MedSamRepo/MedSAM2_latest.pt"
+MODEL_CONFIG = r"//workspace/Segmentacion-Modelo/MedSAM2/sam2/configs/sam2.1_hiera_t512.yaml"
+MODEL_CHECKPOINT = r"//workspace/Segmentacion-Modelo/MedSAM2/MedSAM2_latest.pt"
 
 class PromptData(TypedDict):
     box: tuple[int, int, int, int]
@@ -89,7 +89,7 @@ import platform
 if platform.system() == 'Windows':
     INPUT_FOLDER_STORAGE = Path(os.getcwd() + "inputs")
 else:
-    INPUT_FOLDER_STORAGE = Path(r"//workspace/Segmentacion-Modelo/MedSAM2/MedSamRepo/inputs")
+    INPUT_FOLDER_STORAGE = Path(r"//workspace/Segmentacion-Modelo/MedSAM2/inputs")
 
 def save_images(uuid: str, images: List[UploadFile], lowest_frame, greatest_frame) -> Path:
     if not images:
