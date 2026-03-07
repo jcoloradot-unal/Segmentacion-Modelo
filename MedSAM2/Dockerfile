@@ -8,9 +8,9 @@ RUN apt-get update && \
 
 # Combine clone + venv + installs in one layer to avoid caching intermediate states
 RUN git clone https://github.com/jcoloradot-unal/Segmentacion-Modelo.git && \
-    python3 -m venv /opt/venv && \
-    /opt/venv/bin/pip install --no-cache-dir -e '/workspace/Segmentacion-Modelo/MedSAM2[dev]' && \
-    /opt/venv/bin/pip install --no-cache-dir fastapi uvicorn
+    python3 -m venv --system-site-packages /opt/venv && \
+    /opt/venv/bin/pip install --no-cache-dir -e '/workspace/Segmentacion-Modelo/MedSAM2' && \
+    /opt/venv/bin/pip install --no-cache-dir fastapi[standard]
 
 ENV PATH="/opt/venv/bin:$PATH"
 
