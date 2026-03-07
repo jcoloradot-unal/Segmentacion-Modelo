@@ -1,4 +1,5 @@
 fastapi[standard]
-sam2==1.1.0
-setuptools==80.9.0
-matplotlib==3.10.7
+sam2
+setuptools
+matplotlib
+numpy
