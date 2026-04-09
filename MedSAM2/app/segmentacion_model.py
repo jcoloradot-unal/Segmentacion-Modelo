@@ -9,10 +9,11 @@ from pathlib import Path
 import shutil
 import uuid
 import torch._dynamo
+
 torch._dynamo.config.suppress_errors = True
 
 torch.set_default_dtype(torch.float32)
-    
+
 # Disable autocast if it's causing issues
 torch.backends.cuda.matmul.allow_tf32 = False
 torch.backends.cudnn.allow_tf32 = False
@@ -25,15 +26,22 @@ OUTPUT_DIR = os.getcwd() + "\\output"
 FRAMES_OUTPUT = "frames"
 VIDEO_OUTPUT = "video"
 # if os.name == 'nt':
-#     MODEL_CONFIG = os.getcwd() + "/sam2/configs/sam2.1_hiera_t512.yaml"
-#     MODEL_CHECKPOINT = os.getcwd() + "/checkpoints/MedSAM2_latest.pt"
+# MODEL_CONFIG = os.getcwd() + r"//MedSAM2/sam2/configs/sam2.1_hiera_t512.yaml"
+# MODEL_CHECKPOINT = os.getcwd() + r"//MedSAM2/checkpoints/MedSAM2_latest.pt"
+
 # else:
-MODEL_CONFIG = r"//workspace/Segmentacion-Modelo/MedSAM2/sam2/configs/sam2.1_hiera_t512.yaml"
-MODEL_CHECKPOINT = r"//workspace/Segmentacion-Modelo/MedSAM2/checkpoints/MedSAM2_latest.pt"
+MODEL_CONFIG = (
+    r"//workspace/Segmentacion-Modelo/MedSAM2/sam2/configs/sam2.1_hiera_t512.yaml"
+)
+MODEL_CHECKPOINT = (
+    r"//workspace/Segmentacion-Modelo/MedSAM2/checkpoints/MedSAM2_latest.pt"
+)
+
 
 class PromptData(TypedDict):
     box: tuple[int, int, int, int]
     frame: int
+
 
 def load_ann_png(path):
     """Load a PNG file as a mask and its palette."""
@@ -41,6 +49,7 @@ def load_ann_png(path):
     palette = mask.getpalette()
     mask = np.array(mask).astype(np.uint8)
     return mask, palette
+
 
 def get_mask(per_obj_mask, height, width):
     mask = np.zeros((height, width), dtype=np.uint8)
@@ -53,11 +62,13 @@ def get_mask(per_obj_mask, height, width):
         mask[object_mask] = object_id
     return mask
 
+
 def get_from_dic_no_errors(dic, key):
     try:
         return dic[key]
     except:
         return None
+
 
 def clear_folder(folder_path):
     """
@@ -80,62 +91,62 @@ def clear_folder(folder_path):
         except Exception as e:
             print(f"Failed to delete {path}: {e}")
 
+
 class PromptData(TypedDict):
     box: tuple[int, int, int, int]
     frame: int
 
+
 import platform
 
-if platform.system() == 'Windows':
+if platform.system() == "Windows":
     INPUT_FOLDER_STORAGE = Path(os.getcwd() + "inputs")
 else:
     INPUT_FOLDER_STORAGE = Path(r"//workspace/Segmentacion-Modelo/MedSAM2/inputs")
 
-def save_images(uuid: str, images: List[UploadFile], lowest_frame, greatest_frame) -> Path:
+
+def save_images(
+    uuid: str, images: List[UploadFile], lowest_frame, greatest_frame
+) -> Path:
     if not images:
         raise ValueError("No Images provided")
-    
+
     # Create the main storage folder if it doesn't exist
     INPUT_FOLDER_STORAGE.mkdir(exist_ok=True, parents=True)
-    
+
     # Create UUID-specific folder
     uuid_folder = INPUT_FOLDER_STORAGE / (uuid + "_fwd")
     uuid_folder_bwd = INPUT_FOLDER_STORAGE / (uuid + "_bwd")
     uuid_folder.mkdir(exist_ok=True, parents=True)
     uuid_folder_bwd.mkdir(exist_ok=True, parents=True)
-    
+
     # Save each DICOM file
     saved_files = []
     try:
         for idx, file in enumerate(images):
-            print("INDEX AS FILE?:", idx)
             if idx >= lowest_frame:
                 # Just storing images from lowest moving forward
                 # Use original filename or create sequential name
-                # if file.filename:
-                #     filename = file.filename
-                # else:
                 filename = f"{idx:04d}.jpg"
-                
+
                 # Full path for the file
                 file_path = uuid_folder / filename
-                
+
                 # Save the file
                 with open(file_path, "wb") as buffer:
                     shutil.copyfileobj(file.file, buffer)
-                
+
                 saved_files.append(file_path)
-                print(f"✓ Saved: {filename}")
             if idx < lowest_frame:
                 filename = f"{(len(images) - idx - 1):04d}.jpg"
                 file_path = uuid_folder_bwd / filename
                 # Save the file
                 with open(file_path, "wb") as buffer:
                     shutil.copyfileobj(file.file, buffer)
-        
-        print(f"✓ Saved {len(saved_files)} DICOM files to {uuid_folder}")
+
+        print(f"✓ Saved {len(saved_files)} files to {uuid_folder}")
         return uuid_folder, uuid_folder_bwd
-    
+
     except Exception as e:
         # Clean up on error (optional - remove if you want to keep partial uploads)
         if uuid_folder.exists():
@@ -146,99 +157,33 @@ def save_images(uuid: str, images: List[UploadFile], lowest_frame, greatest_fram
         for file in images:
             file.file.close()
 
-def predict_masks(files: List[UploadFile], boxes: List[PromptData]):
-    id = str(uuid.uuid4())
-    input_folder = save_images(id, files)
-    
-    predictor = build_sam2_video_predictor(
-        config_file=MODEL_CONFIG,
-        ckpt_path=MODEL_CHECKPOINT,
-        apply_postprocessing=True,
-        vos_optimized=False,
-    )
-    
-    # Load the video frames
-    frame_names = [
-        os.path.splitext(p)[0] + ".jpg"
-        for p in os.listdir(input_folder)
-        if os.path.splitext(p)[-1] in [".jpg", ".jpeg", ".JPG", ".JPEG"]
-    ]
-    frame_names = list(sorted(frame_names))
-    
-    inference_state = predictor.init_state(
-        video_path=str(input_folder),  # Convert Path to string
-        async_loading_frames=False
-    )
-
-    predictor.reset_state(inference_state)
-
-    height = inference_state["video_height"]
-    width = inference_state["video_width"]
-
-    # Add prompts for each box
-    for i in range(len(boxes)):
-        frame = boxes[i]["frame"]  # Use dict key access
-        prompt = boxes[i]["box"]   # Use dict key access
-        predictor.add_new_points_or_box(
-            inference_state=inference_state,
-            frame_idx=frame,
-            obj_id=i + 1,
-            box=prompt
-        )
-
-    # Run propagation throughout the video
-    video_segments = {}  # Store the per-frame segmentation results
-    
-    for out_frame_idx, out_obj_ids, out_mask_logits in predictor.propagate_in_video(
-        inference_state
-    ):
-        per_obj_output_mask = {
-            out_obj_id: (out_mask_logits[i] > 0.0).cpu().numpy()
-            for i, out_obj_id in enumerate(out_obj_ids)
-        }
-        video_segments[out_frame_idx] = per_obj_output_mask
-
-    # Generate masks for each frame
-    masks = []
-    for out_frame_idx, per_obj_output_mask in video_segments.items():
-        mask = get_mask(per_obj_output_mask, height, width)
-        masks.append({
-            "frame": out_frame_idx,
-            "mask": mask.tolist()  # Convert numpy array to list for JSON serialization
-        })
-    
-    # Clean up the temporary folder
-    try:
-        shutil.rmtree(input_folder)
-        print(f"✓ Cleaned up temporary folder: {input_folder}")
-    except Exception as e:
-        print(f"Warning: Could not clean up {input_folder}: {e}")
-    
-    print(f"RETURNING {len(masks)} masks")
-    return masks
-
-# predict_masks()
 
 class PointPromptData(TypedDict):
     points: List[tuple[int, int]]  # List of (x, y) coordinates
     labels: List[int]  # List of labels (1 for positive, 0 for negative)
     frame: int
 
-def predict_masks_with_points(files: List[UploadFile], point_prompts: List[PointPromptData]):
+
+def predict_masks_with_points(
+    files: List[UploadFile], point_prompts: List[PointPromptData]
+):
     id = str(uuid.uuid4())
-    
+
     lowest_frame = min(point["frame"] for point in point_prompts)
     greatest_frame = max(point["frame"] for point in point_prompts)
 
-    input_folder, input_folder_bwd = save_images(id, files, lowest_frame, greatest_frame)
-    
+    input_folder, input_folder_bwd = save_images(
+        id, files, lowest_frame, greatest_frame
+    )
+
     predictor = build_sam2_video_predictor(
         config_file=MODEL_CONFIG,
         ckpt_path=MODEL_CHECKPOINT,
         apply_postprocessing=True,
         vos_optimized=False,
+        device="cpu",
     )
-    
+
     # Load the video frames
     frame_names = [
         os.path.splitext(p)[0] + ".jpg"
@@ -246,12 +191,11 @@ def predict_masks_with_points(files: List[UploadFile], point_prompts: List[Point
         if os.path.splitext(p)[-1] in [".jpg", ".jpeg", ".JPG", ".JPEG"]
     ]
     frame_names = list(sorted(frame_names))
-    
+
     inference_state = predictor.init_state(
-        video_path=str(input_folder),
-        async_loading_frames=False
+        video_path=str(input_folder), async_loading_frames=False
     )
-    
+
     # inference_state2 = predictor.init_state(
     #     video_path=str(input_folder_bwd),
     #     async_loading_frames=False
@@ -268,7 +212,7 @@ def predict_masks_with_points(files: List[UploadFile], point_prompts: List[Point
         frame = point_prompts[i]["frame"] - lowest_frame
         points = np.array(point_prompts[i]["points"], dtype=np.float32)
         labels = np.array(point_prompts[i]["labels"], dtype=np.int32)
-        
+
         predictor.add_new_points_or_box(
             inference_state=inference_state,
             frame_idx=frame,
@@ -279,44 +223,37 @@ def predict_masks_with_points(files: List[UploadFile], point_prompts: List[Point
 
     # Run propagation throughout the video
     video_segments = {}
-    
+
     for out_frame_idx, out_obj_ids, out_mask_logits in predictor.propagate_in_video(
         inference_state
     ):
-        print("THIS ID:", out_obj_ids)
-        
         per_obj_output_mask = {
             out_obj_id: (out_mask_logits[i] > 0.0).cpu().numpy()
             for i, out_obj_id in enumerate(out_obj_ids)
         }
         video_segments[out_frame_idx] = per_obj_output_mask
-    
+
     # Generate masks for each frame fwd
-    masks = []   
+    masks = []
     for out_frame_idx, per_obj_output_mask in video_segments.items():
         mask = get_mask(per_obj_output_mask, height, width)
-        masks.append({
-            "frame": out_frame_idx + lowest_frame,
-            "mask": mask.tolist()
-        })
-        
-    
+        masks.append({"frame": out_frame_idx + lowest_frame, "mask": mask.tolist()})
+
     predictor2 = build_sam2_video_predictor(
         config_file=MODEL_CONFIG,
         ckpt_path=MODEL_CHECKPOINT,
         apply_postprocessing=True,
         vos_optimized=False,
-    ) 
-    
+    )
+
     # checks if there is actually images to mask backwards
     if len(os.listdir(input_folder_bwd)) > 0:
         inference_state2 = predictor2.init_state(
-            video_path=str(input_folder_bwd),
-            async_loading_frames=False
+            video_path=str(input_folder_bwd), async_loading_frames=False
         )
 
         predictor2.reset_state(inference_state2)
-        
+
         point_prompts = [f for f in point_prompts if f["frame"] == lowest_frame]
         # Add prompts for each point set backwards
         for i in range(len(point_prompts)):
@@ -330,24 +267,25 @@ def predict_masks_with_points(files: List[UploadFile], point_prompts: List[Point
                 points=points,
                 labels=labels,
             )
-            
-        for out_frame_idx, out_obj_ids, out_mask_logits in predictor2.propagate_in_video(
-            inference_state2
-        ):
+
+        video_segments2 = {}
+
+        for (
+            out_frame_idx,
+            out_obj_ids,
+            out_mask_logits,
+        ) in predictor2.propagate_in_video(inference_state2):
             per_obj_output_mask = {
                 out_obj_id: (out_mask_logits[i] > 0.0).cpu().numpy()
                 for i, out_obj_id in enumerate(out_obj_ids)
             }
-            video_segments[out_frame_idx] = per_obj_output_mask
-    
+            video_segments2[out_frame_idx] = per_obj_output_mask
+
     # Generate masks for each frame bwd
-    for out_frame_idx, per_obj_output_mask in video_segments.items():
+    for out_frame_idx, per_obj_output_mask in video_segments2.items():
         mask = get_mask(per_obj_output_mask, height, width)
-        masks.append({
-            "frame": greatest_frame - out_frame_idx,
-            "mask": mask.tolist()
-        })
-        
+        masks.append({"frame": greatest_frame - out_frame_idx, "mask": mask.tolist()})
+
     # Clean up the temporary folder
     try:
         shutil.rmtree(input_folder)
@@ -355,6 +293,6 @@ def predict_masks_with_points(files: List[UploadFile], point_prompts: List[Point
         print(f"✓ Cleaned up temporary folders: {input_folder}")
     except Exception as e:
         print(f"Warning: Could not clean up {input_folder}: {e}")
-    
+
     print(f"RETURNING {len(masks)} masks")
     return masks
