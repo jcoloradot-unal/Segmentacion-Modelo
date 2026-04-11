@@ -181,7 +181,7 @@ def predict_masks_with_points(
         ckpt_path=MODEL_CHECKPOINT,
         apply_postprocessing=True,
         vos_optimized=False,
-        device="cpu",
+        # device="cpu",
     )
 
     # Load the video frames
